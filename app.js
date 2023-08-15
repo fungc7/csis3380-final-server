@@ -58,6 +58,7 @@ app.use(express.json());
 // })
 
 app.get("/", (req, res, next) => {
+    console.log("Yes")
     res.json("Hello World.");
 })
 
@@ -72,7 +73,7 @@ app.use((err, req, res, next) => {
     res.json({
         error: {
             message: err.message,
-            dbserver: uri,
+            // dbserver: uri,
         }
     })
 });
