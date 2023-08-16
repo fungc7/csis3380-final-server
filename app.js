@@ -1,65 +1,120 @@
 import express from 'express';
+import bodyParser from "body-parser";
+import cors from "cors";
 import mongoose from 'mongoose';
 const { Schema, model } = mongoose;
 
 const app = express();
 app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 
-// const uri = "mongodb+srv://tempuser:123@cluster0.f9d6o.gcp.mongodb.net/Exam";
+const corsOptions = {
+    origin: '*',
+    credentials: true,            //access-control-allow-credentials:true
+    optionSuccessStatus: 200,
+}
+app.use(cors(corsOptions));
 
-// const data = [
-//     { name : "Ivan Fung",
-//         sid : "300371938"
-//     }
-// ];
+const uri = "mongodb+srv://csis3380:Csis33801234@cluster0.cvrdzvp.mongodb.net/BookList";
 
-// // Create and/or connect to the database
-// mongoose.connect(uri, {
-//     useNewUrlParser: true,
-//     useUnifiedTopology: true,
-// })
+// Create and/or connect to the database
+mongoose.connect(uri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+})
 
-// console.log('Connected');
+console.log('Connected');
 
-// const quizSchema = new Schema({
-//     name: String,
-//     sid: String,
-// });
+const bookSchema = new Schema({
+    id: String,
+    title: String,
+    author: String,
+    description: String
+});
 
-// // Use the "bookInfo" collection
-// const Stud = model("QuizSchema", quizSchema, "quizes");
+// Use the "bookInfo" collection
+const Book = model("BookSchema", bookSchema, "300371938-ivan");
 
-// app.get("/", async (req, res, next) => {
-//     try {
-//         const records = [];
-//         data.forEach((record) => {
-//             records.push(new Stud(record));
-//         })
-//         await Stud.insertMany(records);
-//         res.json({
-//             message: "Successful insert.",
-//             dbserver: uri,
-//         })
-//         res.status(204).end();
-//     } catch(err){
-//         next(err);
-//     }
-// })
+// insert book
+app.post("/", async (req, res, next) => {
+    const formdata = req.body;
+    try {
+        const newBook = new Book({
+            id : formdata.id,
+            title: formdata.title,
+            author: formdata.author,
+            description: formdata.description
+        })
+        await Book.insertMany([newBook]);
+        res.json({
+            message: "Successful insert.",
+            // dbserver: uri,
+        })
+        res.status(204).end();
+    } catch(err){
+        next(err);
+    }
+})
 
-// app.get("/test", async (req, res, next) => {
-//     try {
-//         const records = await Stud.find({});
-//         res.json(records);
-//         res.status(204).end();
-//     }
-//     catch(err) {
-//         next(err);
-//     }
-// })
+// update book
+app.post("/:id", async (req, res, next) => {
+    const id = req.params.id;
+    const formdata = req.body;
+    try {
+        const update = await Book.updateMany(
+            {id: id},
+            { $set: {
+                    title: formdata.title,
+                    author: formdata.author,
+                    description: formdata.description
+                }
+            }
+        )
+        res.json({
+            message: `updated.`,
+        })
+        res.status(204).end();
+    } catch(err){
+        next(err);
+    }
+})
 
-app.get("/", (req, res, next) => {
-    console.log("Yes")
-    res.json("Hello World.");
+// get all books
+app.get("/", async (req, res, next) => {
+    try {
+        const records = await Book.find({});
+        res.json(records);
+        res.status(204).end();
+    }
+    catch(err) {
+        next(err);
+    }
+})
+
+// get books by id
+app.get("/:id", async (req, res, next) => {
+    const id = req.params.id;
+    try {
+        const records = await Book.find({id : id});
+        res.json(records);
+        res.status(204).end();
+    }
+    catch(err) {
+        next(err);
+    }
+})
+
+// delete books
+app.delete("/:id", async (req, res, next) => {
+    const id = req.params.id;
+    try {
+        const deleteResult = await Book.deleteMany({ id: id });
+        res.json(`${deleteResult.deletedCount} books deleted.`);
+        res.status(204).end();
+    }
+    catch (err) {
+        next(err);
+    }
 })
 
 app.use((req, res, next) => {
@@ -78,4 +133,4 @@ app.use((err, req, res, next) => {
     })
 });
 
-app.listen(7000, () => console.log('user API listening on port 7000!'));
+app.listen(5000, () => console.log('user API listening on port 5000!'));
